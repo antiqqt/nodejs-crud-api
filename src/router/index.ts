@@ -1,4 +1,11 @@
 import { IncomingMessage, ServerResponse } from 'http';
+import {
+    createUser,
+    deleteUser,
+    getUser,
+    getUsers,
+    updateUser,
+} from '../controllers/user';
 
 interface RequestRoute {
     url: string;
@@ -10,7 +17,7 @@ type AppRouteNames = 'findAll' | 'findOne' | 'create' | 'update' | 'delete';
 interface AppRoute {
     url: RegExp;
     method: string;
-    controller: (
+    controller?: (
         req: IncomingMessage,
         res: ServerResponse<IncomingMessage>,
     ) => void;
@@ -18,24 +25,29 @@ interface AppRoute {
 
 const Routes: Record<AppRouteNames, AppRoute> = {
     findAll: {
-        url: /\/api\/users/,
+        url: /^\/api\/users$/,
         method: 'GET',
+        controller: getUsers,
     },
     findOne: {
-        url: /\/api\/users\/\w+/,
+        url: /\/api\/users\/[\d | \w | -]+/,
         method: 'GET',
+        controller: getUser,
     },
     create: {
-        url: /\/api\/users\/\w+/,
+        url: /^\/api\/users$/,
         method: 'POST',
+        controller: createUser,
     },
     update: {
-        url: /\/api\/users\/\w+/,
+        url: /\/api\/users\/[\d | \w | -]+/,
         method: 'PUT',
+        controller: updateUser,
     },
     delete: {
-        url: /\/api\/users\/\w+/,
+        url: /\/api\/users\/[\d | \w | -]+/,
         method: 'DELETE',
+        controller: deleteUser,
     },
 };
 

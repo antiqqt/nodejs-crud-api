@@ -18,7 +18,7 @@ export function isValidUserBody(obj: object): obj is UserBody {
     return true;
 }
 
-export async function wrapInternalError<A extends Array<unknown>, R>(
+export function wrapInternalError<A extends Array<unknown>, R>(
     handler: (...args: A) => Promise<R>,
 ) {
     return async (...args: A): Promise<R> => {
