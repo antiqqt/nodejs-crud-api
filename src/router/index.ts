@@ -6,6 +6,7 @@ import {
     getUsers,
     updateUser,
 } from '../controllers/user';
+import { Errors, handleError } from '../errors';
 
 interface RequestRoute {
     url: string;
@@ -65,28 +66,24 @@ class Router {
         return currentRoute.controller;
     }
 
-    public handleRequest(
+    public async handleRequest(
         req: IncomingMessage,
         res: ServerResponse<IncomingMessage>,
     ) {
-        const requestRoute = {
-            url: req.url ?? '',
-            method: req.method ?? '',
-        };
+        try {
+            const requestRoute = {
+                url: req.url ?? '',
+                method: req.method ?? '',
+            };
 
-        const controller = this.selectController(requestRoute);
+            const controller = this.selectController(requestRoute);
 
-        if (!controller) {
-            res.writeHead(404, { 'Content-Type': 'application/json' });
-            res.end(
-                JSON.stringify({
-                    message: 'Route Not Found: Please use the correct endpoint',
-                }),
-            );
-            return;
+            if (!controller) throw Errors.NotFound;
+
+            controller(req, res);
+        } catch (error) {
+            handleError(error, res);
         }
-
-        controller(req, res);
     }
 }
 

@@ -1,12 +1,8 @@
 import { v4 as uuidv4 } from 'uuid';
 import users from '../../data/db';
-import { Errors } from '../../errors';
+import { Errors, wrapInternalError } from '../../errors';
 import { UserBody, UserData } from '../../types';
-import {
-    checkIsValidUUID,
-    isValidUserBody,
-    wrapInternalError,
-} from './helpers';
+import { checkIsValidUUID, isValidUserBody } from './helpers';
 
 let db = users;
 

@@ -1,25 +1,8 @@
 import { IncomingMessage, ServerResponse } from 'http';
-import { Errors } from '../../errors';
+import { Errors, handleError } from '../../errors';
 import User from '../../models/user';
-import { isHttpError } from '../../models/user/helpers';
 import { UserBody } from '../../types';
 import extractPostData from './helpers';
-
-function handleError(error: unknown, res: ServerResponse<IncomingMessage>) {
-    res.writeHead(isHttpError(error) ? error.status : 500, {
-        'Content-Type': 'application/json',
-    });
-    res.end(
-        JSON.stringify({
-            message: isHttpError(error)
-                ? error.message
-                : Errors.Internal.message,
-        }),
-    );
-
-    // eslint-disable-next-line no-console
-    console.error(error);
-}
 
 // @route   GET /api/users
 async function getUsers(

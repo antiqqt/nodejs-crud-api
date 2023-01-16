@@ -10,7 +10,11 @@ const server = createServer((req, res) => {
     router.handleRequest(req, res);
 });
 
-server.listen(port, () => {
-    // eslint-disable-next-line no-console
-    console.log(`Server is running on port: ${port}`);
-});
+if (process.env.NODE_ENV !== 'test') {
+    server.listen(port, () => {
+        // eslint-disable-next-line no-console
+        console.log(`Server is running on port: ${port}`);
+    });
+}
+
+export default server;
