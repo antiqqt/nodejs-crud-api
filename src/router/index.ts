@@ -33,7 +33,7 @@ const Routes: Record<AppRouteNames, AppRoute> = {
         controller: getUsers,
     },
     findOne: {
-        url: /\/api\/users\/[\d | \w | -]+/,
+        url: /^\/api\/users\/[\d | \w | -]+$/,
         method: 'GET',
         controller: getUser,
     },
@@ -43,12 +43,12 @@ const Routes: Record<AppRouteNames, AppRoute> = {
         controller: createUser,
     },
     update: {
-        url: /\/api\/users\/[\d | \w | -]+/,
+        url: /^\/api\/users\/[\d | \w | -]+$/,
         method: 'PUT',
         controller: updateUser,
     },
     delete: {
-        url: /\/api\/users\/[\d | \w | -]+/,
+        url: /^\/api\/users\/[\d | \w | -]+$/,
         method: 'DELETE',
         controller: deleteUser,
     },
