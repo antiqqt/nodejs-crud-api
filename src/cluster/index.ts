@@ -3,7 +3,7 @@ import cluster from 'node:cluster';
 import {
     createServer,
     IncomingMessage,
-    request,
+    request as HTTPRequest,
     ServerResponse,
 } from 'node:http';
 import { cpus } from 'node:os';
@@ -52,13 +52,13 @@ export default function clusterize(port: number) {
             });
         }
 
-        createServer((req, res) => {
+        createServer((request, response) => {
             const currentWorker = workers[counter.getCurrentCount()];
 
             const options = {
-                headers: req.headers,
-                method: req.method,
-                path: req.url,
+                headers: request.headers,
+                method: request.method,
+                path: request.url,
                 port: currentWorker.port,
             };
 
@@ -66,7 +66,7 @@ export default function clusterize(port: number) {
                 `Request is handled by worker on port ${currentWorker.port}`,
             );
 
-            const workerRequest = request(options, (workerResponse) => {
+            const workerRequest = HTTPRequest(options, (workerResponse) => {
                 let data = '';
 
                 workerResponse.on('data', (chunk) => {
@@ -74,21 +74,22 @@ export default function clusterize(port: number) {
                 });
 
                 workerResponse.on('end', () => {
-                    res.writeHead(
+                    response.writeHead(
                         workerResponse.statusCode ??
                             ServerErrors.Internal.statusCode,
                         { 'content-Type': 'application/json' },
                     );
-                    res.end(data);
+                    response.end(data);
                 });
             });
 
             let body = '';
 
-            req.on('data', (chunk) => {
+            request.on('data', (chunk) => {
                 body += chunk.toString();
             });
-            req.on('end', () => {
+
+            request.on('end', () => {
                 workerRequest.write(body);
                 workerRequest.end();
             });
@@ -104,8 +105,8 @@ export default function clusterize(port: number) {
     }
 
     if (cluster.isWorker) {
-        createServer((req: IncomingMessage, res: ServerResponse) => {
-            router.handleRequest(req, res);
+        createServer((request: IncomingMessage, response: ServerResponse) => {
+            router.handleRequest(request, response);
         }).listen(process.env.PORT);
 
         console.log(`Worker is running on port ${process.env.PORT}`);

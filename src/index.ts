@@ -7,8 +7,8 @@ dotenv.config();
 
 const port = Number(process.env.PORT) || 6000;
 
-const server = createServer((req, res) => {
-    router.handleRequest(req, res);
+const server = createServer((request, response) => {
+    router.handleRequest(request, response);
 });
 
 if (process.env.NODE_ENV !== 'test') {

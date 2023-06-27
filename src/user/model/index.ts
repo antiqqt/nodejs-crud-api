@@ -5,7 +5,7 @@ import { UserData } from '../../types';
 import { UserDto } from '../types';
 import { checkIsValidUUID, isValidUserBody } from './helpers';
 
-function handleInternalError<This, Args extends unknown[], Return>(
+function handleSystemError<This, Args extends unknown[], Return>(
     target: (this: This, ...args: Args) => Promise<Return>,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     context: ClassMethodDecoratorContext<
@@ -31,12 +31,12 @@ function handleInternalError<This, Args extends unknown[], Return>(
 export default class UserModel {
     constructor(private database: UserData[]) {}
 
-    @handleInternalError
+    @handleSystemError
     async findAll() {
         return this.database;
     }
 
-    @handleInternalError
+    @handleSystemError
     async findOne(id: string) {
         if (!checkIsValidUUID(id)) {
             throw ServerErrors.InvalidId;
@@ -48,7 +48,7 @@ export default class UserModel {
         return user;
     }
 
-    @handleInternalError
+    @handleSystemError
     async create(userDto: UserDto) {
         if (!isValidUserBody(userDto)) {
             throw ServerErrors.InvalidUserBody;
@@ -60,7 +60,7 @@ export default class UserModel {
         return newUser;
     }
 
-    @handleInternalError
+    @handleSystemError
     async update(id: string, userDto: UserDto) {
         if (!checkIsValidUUID(id)) throw ServerErrors.InvalidId;
 
@@ -72,7 +72,7 @@ export default class UserModel {
         return this.database[userIndex];
     }
 
-    @handleInternalError
+    @handleSystemError
     async delete(id: string) {
         if (!checkIsValidUUID(id)) throw ServerErrors.InvalidId;
 

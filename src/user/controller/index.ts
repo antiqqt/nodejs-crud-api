@@ -9,64 +9,70 @@ import { extractRequestBody } from './helpers';
 export default class UserController {
     constructor(private service: UserService) {}
 
-    // @route   GET /api/users
-    async getUsers(req: IncomingMessage, res: ServerResponse<IncomingMessage>) {
+    // @route  GET /api/users
+    async getUsers(
+        request: IncomingMessage,
+        response: ServerResponse<IncomingMessage>,
+    ) {
         try {
             const users = await this.service.findAll();
 
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify(users));
+            response.writeHead(200, { 'Content-Type': 'application/json' });
+            response.end(JSON.stringify(users));
         } catch (error) {
-            handleError(error, res);
+            handleError(error, response);
         }
     }
 
     // @route   GET /api/users/:id
-    async getUser(req: IncomingMessage, res: ServerResponse<IncomingMessage>) {
+    async getUser(
+        request: IncomingMessage,
+        response: ServerResponse<IncomingMessage>,
+    ) {
         try {
-            const userId = req.url?.split('/')[3];
+            const userId = request.url?.split('/')[3];
             if (!userId) throw ServerErrors.InvalidId;
 
             const user = await this.service.findOne(userId);
 
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify(user));
+            response.writeHead(200, { 'Content-Type': 'application/json' });
+            response.end(JSON.stringify(user));
         } catch (error) {
-            handleError(error, res);
+            handleError(error, response);
         }
     }
 
     // @route   POST /api/users
     async createUser(
-        req: IncomingMessage,
-        res: ServerResponse<IncomingMessage>,
+        request: IncomingMessage,
+        response: ServerResponse<IncomingMessage>,
     ) {
         try {
-            const body = await extractRequestBody(req);
+            const body = await extractRequestBody(request);
             if (typeof body !== 'string') throw ServerErrors.Internal;
 
             const newUserBody = JSON.parse(body);
             const newProduct = await this.service.create(newUserBody);
 
-            res.writeHead(201, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify(newProduct));
+            response.writeHead(201, { 'Content-Type': 'application/json' });
+            response.end(JSON.stringify(newProduct));
         } catch (error) {
-            handleError(error, res);
+            handleError(error, response);
         }
     }
 
     // @route   PUT /api/users/:id
     async updateUser(
-        req: IncomingMessage,
-        res: ServerResponse<IncomingMessage>,
+        request: IncomingMessage,
+        response: ServerResponse<IncomingMessage>,
     ) {
         try {
-            const userId = req.url?.split('/')[3];
+            const userId = request.url?.split('/')[3];
             if (!userId) throw ServerErrors.InvalidId;
 
             const user = await this.service.findOne(userId);
 
-            const body = await extractRequestBody(req);
+            const body = await extractRequestBody(request);
             if (typeof body !== 'string') throw ServerErrors.Internal;
             const { age, username, hobbies } = JSON.parse(body);
 
@@ -78,28 +84,28 @@ export default class UserController {
 
             const updatedUser = await this.service.update(userId, newUserBody);
 
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify(updatedUser));
+            response.writeHead(200, { 'Content-Type': 'application/json' });
+            response.end(JSON.stringify(updatedUser));
         } catch (error) {
-            handleError(error, res);
+            handleError(error, response);
         }
     }
 
     // @route   DELETE /api/users/:id
     async deleteUser(
-        req: IncomingMessage,
-        res: ServerResponse<IncomingMessage>,
+        request: IncomingMessage,
+        response: ServerResponse<IncomingMessage>,
     ) {
         try {
-            const userId = req.url?.split('/')[3];
+            const userId = request.url?.split('/')[3];
             if (!userId) throw ServerErrors.InvalidId;
 
             await this.service.delete(userId);
 
-            res.writeHead(204, { 'Content-Type': 'application/json' });
-            res.end();
+            response.writeHead(204, { 'Content-Type': 'application/json' });
+            response.end();
         } catch (error) {
-            handleError(error, res);
+            handleError(error, response);
         }
     }
 }

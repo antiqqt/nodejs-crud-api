@@ -5,11 +5,14 @@ function isServerError(error: unknown): error is ServerError {
     return error instanceof ServerError;
 }
 
-function handleError(error: unknown, res: ServerResponse<IncomingMessage>) {
-    res.writeHead(isServerError(error) ? error.statusCode : 500, {
+function handleError(
+    error: unknown,
+    response: ServerResponse<IncomingMessage>,
+) {
+    response.writeHead(isServerError(error) ? error.statusCode : 500, {
         'Content-Type': 'application/json',
     });
-    res.end(
+    response.end(
         JSON.stringify({
             message: isServerError(error)
                 ? error.message
