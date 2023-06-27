@@ -1,8 +1,9 @@
 import { IncomingMessage, ServerResponse } from 'http';
-import { Errors, handleError } from '../../errors';
 import User from '../../models/user';
 import { UserBody } from '../../types';
 import extractPostData from './helpers';
+import { handleError } from '../../errors/helpers';
+import ServerErrors from '../../errors';
 
 // @route   GET /api/users
 async function getUsers(
@@ -26,7 +27,7 @@ async function getUser(
 ) {
     try {
         const userId = req.url?.split('/')[3];
-        if (!userId) throw Errors.InvalidId;
+        if (!userId) throw ServerErrors.InvalidId;
 
         const user = await User.findOne(userId);
 
@@ -44,7 +45,7 @@ async function createUser(
 ) {
     try {
         const body = await extractPostData(req);
-        if (typeof body !== 'string') throw Errors.Internal;
+        if (typeof body !== 'string') throw ServerErrors.Internal;
 
         const newUserBody = JSON.parse(body);
         const newProduct = await User.create(newUserBody);
@@ -63,12 +64,12 @@ async function updateUser(
 ) {
     try {
         const userId = req.url?.split('/')[3];
-        if (!userId) throw Errors.InvalidId;
+        if (!userId) throw ServerErrors.InvalidId;
 
         const user = await User.findOne(userId);
 
         const body = await extractPostData(req);
-        if (typeof body !== 'string') throw Errors.Internal;
+        if (typeof body !== 'string') throw ServerErrors.Internal;
         const { age, username, hobbies } = JSON.parse(body);
 
         const newUserBody: UserBody = {
@@ -93,7 +94,7 @@ async function deleteUser(
 ) {
     try {
         const userId = req.url?.split('/')[3];
-        if (!userId) throw Errors.InvalidId;
+        if (!userId) throw ServerErrors.InvalidId;
 
         await User.remove(userId);
 

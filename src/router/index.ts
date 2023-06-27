@@ -7,7 +7,8 @@ import {
     getUsers,
     updateUser,
 } from '../controllers/user';
-import { Errors, handleError } from '../errors';
+import ServerErrors from '../errors';
+import { handleError } from '../errors/helpers';
 
 interface RequestRoute {
     url: string;
@@ -79,7 +80,7 @@ class Router {
 
             const controller = this.selectController(requestRoute);
 
-            if (!controller) throw Errors.NotFound;
+            if (!controller) throw ServerErrors.NotFound;
 
             controller(req, res);
         } catch (error) {

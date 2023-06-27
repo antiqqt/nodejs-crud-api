@@ -8,7 +8,7 @@ import {
 } from 'node:http';
 import { cpus } from 'node:os';
 import process from 'node:process';
-import { Errors } from '../errors';
+import ServerErrors from '../errors';
 import router from '../router';
 
 export class Counter {
@@ -75,7 +75,8 @@ export default function clusterize(port: number) {
 
                 workerResponse.on('end', () => {
                     res.writeHead(
-                        workerResponse.statusCode ?? Errors.Internal.status,
+                        workerResponse.statusCode ??
+                            ServerErrors.Internal.status,
                         { 'content-Type': 'application/json' },
                     );
                     res.end(data);
