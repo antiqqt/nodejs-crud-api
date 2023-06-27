@@ -10,58 +10,54 @@ import {
 import ServerErrors from '../errors';
 import { handleError } from '../errors/helpers';
 
-interface RequestRoute {
+interface RouteDto {
     url: string;
     method: string;
 }
 
-type AppRouteNames = 'findAll' | 'findOne' | 'create' | 'update' | 'delete';
-
-interface AppRoute {
-    url: RegExp;
-    method: string;
-    controller?: (
-        req: IncomingMessage,
-        res: ServerResponse<IncomingMessage>,
-    ) => void;
+enum HTTPMethods {
+    GET = 'GET',
+    POST = 'POST',
+    PUT = 'PUT',
+    DELETE = 'DELETE',
 }
 
-const Routes: Record<AppRouteNames, AppRoute> = {
+const Routes = {
     findAll: {
         url: /^\/api\/users$/,
-        method: 'GET',
+        method: HTTPMethods.GET,
         controller: getUsers,
     },
     findOne: {
         url: /^\/api\/users\/[\d | \w | -]+$/,
-        method: 'GET',
+        method: HTTPMethods.GET,
         controller: getUser,
     },
     create: {
         url: /^\/api\/users$/,
-        method: 'POST',
+        method: HTTPMethods.POST,
         controller: createUser,
     },
     update: {
         url: /^\/api\/users\/[\d | \w | -]+$/,
-        method: 'PUT',
+        method: HTTPMethods.PUT,
         controller: updateUser,
     },
     delete: {
         url: /^\/api\/users\/[\d | \w | -]+$/,
-        method: 'DELETE',
+        method: HTTPMethods.DELETE,
         controller: deleteUser,
     },
-};
+} as const;
 
 class Router {
     constructor(private routes: typeof Routes) {}
 
-    private selectController(requestRoute: RequestRoute) {
+    private selectController(routeDto: RouteDto) {
         const currentRoute = Object.values(this.routes).find(
             (appRoute) =>
-                appRoute.url.test(requestRoute.url) &&
-                appRoute.method === requestRoute.method,
+                appRoute.url.test(routeDto.url) &&
+                appRoute.method === routeDto.method,
         );
 
         if (!currentRoute) return null;
@@ -69,22 +65,22 @@ class Router {
     }
 
     public async handleRequest(
-        req: IncomingMessage,
-        res: ServerResponse<IncomingMessage>,
+        request: IncomingMessage,
+        response: ServerResponse<IncomingMessage>,
     ) {
         try {
             const requestRoute = {
-                url: req.url ?? '',
-                method: req.method ?? '',
+                url: request.url ?? '',
+                method: request.method ?? '',
             };
 
             const controller = this.selectController(requestRoute);
 
             if (!controller) throw ServerErrors.NotFound;
 
-            controller(req, res);
+            controller(request, response);
         } catch (error) {
-            handleError(error, res);
+            handleError(error, response);
         }
     }
 }

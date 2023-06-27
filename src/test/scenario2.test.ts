@@ -1,12 +1,12 @@
 import request from 'supertest';
 import { v4 as uuidv4 } from 'uuid';
 import server from '..';
-import { Errors } from '../errors';
+import ServerErrors from '../errors';
 import { API_ROUTE, POST_INVALID_DATA, PUT_DATA } from './testConstants';
 
 describe('\nScenario 2: test invalid CRUD operations', () => {
     it('GET user but with invalid id', async () => {
-        const { status, message } = Errors.NoUser;
+        const { status, message } = ServerErrors.NoUser;
         const randomId = uuidv4();
 
         await request(server)
@@ -18,7 +18,7 @@ describe('\nScenario 2: test invalid CRUD operations', () => {
     });
 
     it('POST user with invalid body', async () => {
-        const { status, message } = Errors.InvalidUserBody;
+        const { status, message } = ServerErrors.InvalidUserBody;
 
         await request(server)
             .post(API_ROUTE)
@@ -33,7 +33,7 @@ describe('\nScenario 2: test invalid CRUD operations', () => {
     });
 
     it('PUT user without id', async () => {
-        const { status, message } = Errors.NotFound;
+        const { status, message } = ServerErrors.NotFound;
 
         await request(server)
             .put(API_ROUTE)
@@ -46,7 +46,7 @@ describe('\nScenario 2: test invalid CRUD operations', () => {
     });
 
     it('DELETE user without providing id', async () => {
-        const { status, message } = Errors.NotFound;
+        const { status, message } = ServerErrors.NotFound;
 
         await request(server)
             .delete(API_ROUTE)

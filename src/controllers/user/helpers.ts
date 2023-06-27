@@ -1,5 +1,5 @@
 import { IncomingMessage } from 'http';
-import { Errors } from '../../errors';
+import ServerErrors from '../../errors';
 
 export default function extractPostData(req: IncomingMessage) {
     return new Promise((resolve, reject) => {
@@ -14,7 +14,7 @@ export default function extractPostData(req: IncomingMessage) {
                 resolve(body);
             });
         } catch {
-            reject(Errors.Internal);
+            reject(ServerErrors.Internal);
         }
     });
 }

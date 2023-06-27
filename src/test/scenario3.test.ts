@@ -1,14 +1,14 @@
 import request from 'supertest';
 import { v4 as uuidv4 } from 'uuid';
 import server from '..';
-import { Errors } from '../errors';
+import ServerErrors from '../errors';
 import { API_ROUTE, POST_DATA, PUT_DATA } from './testConstants';
 
 describe('\nScenario 3: test bad requests', () => {
     const invalidId = `${uuidv4()}2`;
 
     it('GET with invalid id', async () => {
-        const { status, message } = Errors.InvalidId;
+        const { status, message } = ServerErrors.InvalidId;
 
         await request(server)
             .get(`${API_ROUTE}/${invalidId}`)
@@ -19,7 +19,7 @@ describe('\nScenario 3: test bad requests', () => {
     });
 
     it('POST new user but providing id', async () => {
-        const { status, message } = Errors.NotFound;
+        const { status, message } = ServerErrors.NotFound;
 
         await request(server)
             .post(`${API_ROUTE}/${invalidId}`)
@@ -32,7 +32,7 @@ describe('\nScenario 3: test bad requests', () => {
     });
 
     it('PUT user with invalid id', async () => {
-        const { status, message } = Errors.InvalidId;
+        const { status, message } = ServerErrors.InvalidId;
 
         await request(server)
             .put(`${API_ROUTE}/${invalidId}`)
@@ -45,7 +45,7 @@ describe('\nScenario 3: test bad requests', () => {
     });
 
     it('DELETE user with invalid id', async () => {
-        const { status, message } = Errors.InvalidId;
+        const { status, message } = ServerErrors.InvalidId;
 
         await request(server)
             .delete(`${API_ROUTE}/${invalidId}`)

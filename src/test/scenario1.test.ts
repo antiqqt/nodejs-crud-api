@@ -1,7 +1,7 @@
 import request from 'supertest';
 import server from '..';
-import { Errors } from '../errors';
 import { API_ROUTE, POST_DATA, PUT_DATA, SuccessStatus } from './testConstants';
+import ServerErrors from '../errors';
 
 describe('\nScenario 1: test all CRUD operations', () => {
     let id: string;
@@ -58,7 +58,7 @@ describe('\nScenario 1: test all CRUD operations', () => {
     });
 
     it('GET a deleted object by id', async () => {
-        const { status, message } = Errors.NoUser;
+        const { status, message } = ServerErrors.NoUser;
 
         await request(server)
             .get(`${API_ROUTE}/${id}`)
