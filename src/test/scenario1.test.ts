@@ -58,11 +58,11 @@ describe('\nScenario 1: test all CRUD operations', () => {
     });
 
     it('GET a deleted object by id', async () => {
-        const { status, message } = ServerErrors.NoUser;
+        const { statusCode, message } = ServerErrors.NoUser;
 
         await request(server)
             .get(`${API_ROUTE}/${id}`)
-            .expect(status)
+            .expect(statusCode)
             .expect(({ body }) => {
                 expect(body).toEqual({ message });
             });

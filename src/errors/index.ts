@@ -1,4 +1,4 @@
-enum ErrorStatuses {
+enum ErrorStatusCodes {
     NOT_FOUND = 404,
     BAD_REQUEST = 400,
     INTERNAL = 500,
@@ -13,24 +13,30 @@ enum ErrorMessages {
 }
 
 export class ServerError extends Error {
-    constructor(readonly status: number, public message: string) {
+    constructor(readonly statusCode: number, public message: string) {
         super();
     }
 }
 
 const ServerErrors = {
-    NotFound: new ServerError(ErrorStatuses.NOT_FOUND, ErrorMessages.NOT_FOUND),
-    Internal: new ServerError(ErrorStatuses.INTERNAL, ErrorMessages.INTERNAL),
+    NotFound: new ServerError(
+        ErrorStatusCodes.NOT_FOUND,
+        ErrorMessages.NOT_FOUND,
+    ),
+    Internal: new ServerError(
+        ErrorStatusCodes.INTERNAL,
+        ErrorMessages.INTERNAL,
+    ),
     InvalidId: new ServerError(
-        ErrorStatuses.BAD_REQUEST,
+        ErrorStatusCodes.BAD_REQUEST,
         ErrorMessages.INVALID_USER_ID,
     ),
     InvalidUserBody: new ServerError(
-        ErrorStatuses.BAD_REQUEST,
+        ErrorStatusCodes.BAD_REQUEST,
         ErrorMessages.INVALID_USER_BODY,
     ),
     NoUser: new ServerError(
-        ErrorStatuses.NOT_FOUND,
+        ErrorStatusCodes.NOT_FOUND,
         ErrorMessages.USER_NOT_FOUND,
     ),
 } as const;

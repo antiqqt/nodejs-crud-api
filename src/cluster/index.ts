@@ -76,7 +76,7 @@ export default function clusterize(port: number) {
                 workerResponse.on('end', () => {
                     res.writeHead(
                         workerResponse.statusCode ??
-                            ServerErrors.Internal.status,
+                            ServerErrors.Internal.statusCode,
                         { 'content-Type': 'application/json' },
                     );
                     res.end(data);

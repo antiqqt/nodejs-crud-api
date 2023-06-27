@@ -1,16 +1,13 @@
 import { IncomingMessage, ServerResponse } from 'http';
 
-import {
-    createUser,
-    deleteUser,
-    getUser,
-    getUsers,
-    updateUser,
-} from '../controllers/user';
+import db from '../data/db';
 import ServerErrors from '../errors';
 import { handleError } from '../errors/helpers';
+import UserController from '../user/controller';
+import UserModel from '../user/model';
+import UserService from '../user/service';
 
-interface RouteDto {
+interface RequestRoute {
     url: string;
     method: string;
 }
@@ -22,46 +19,50 @@ enum HTTPMethods {
     DELETE = 'DELETE',
 }
 
-const Routes = {
-    findAll: {
+const routes = [
+    {
+        name: 'getUsers',
         url: /^\/api\/users$/,
         method: HTTPMethods.GET,
-        controller: getUsers,
     },
-    findOne: {
+    {
+        name: 'getUser',
         url: /^\/api\/users\/[\d | \w | -]+$/,
         method: HTTPMethods.GET,
-        controller: getUser,
     },
-    create: {
+    {
+        name: 'createUser',
         url: /^\/api\/users$/,
         method: HTTPMethods.POST,
-        controller: createUser,
     },
-    update: {
+    {
+        name: 'updateUser',
         url: /^\/api\/users\/[\d | \w | -]+$/,
         method: HTTPMethods.PUT,
-        controller: updateUser,
     },
-    delete: {
+    {
+        name: 'deleteUser',
         url: /^\/api\/users\/[\d | \w | -]+$/,
         method: HTTPMethods.DELETE,
-        controller: deleteUser,
     },
-} as const;
+] as const;
 
 class Router {
-    constructor(private routes: typeof Routes) {}
+    constructor(
+        private appRoutes: typeof routes,
+        private controller: UserController,
+    ) {}
 
-    private selectController(routeDto: RouteDto) {
-        const currentRoute = Object.values(this.routes).find(
+    private selectRoute(requestRoute: RequestRoute) {
+        const currentRoute = this.appRoutes.find(
             (appRoute) =>
-                appRoute.url.test(routeDto.url) &&
-                appRoute.method === routeDto.method,
+                appRoute.url.test(requestRoute.url) &&
+                appRoute.method === requestRoute.method,
         );
 
         if (!currentRoute) return null;
-        return currentRoute.controller;
+
+        return currentRoute;
     }
 
     public async handleRequest(
@@ -74,16 +75,17 @@ class Router {
                 method: request.method ?? '',
             };
 
-            const controller = this.selectController(requestRoute);
+            const route = this.selectRoute(requestRoute);
 
-            if (!controller) throw ServerErrors.NotFound;
+            if (!route) throw ServerErrors.NotFound;
 
-            controller(request, response);
+            await this.controller[route.name](request, response);
         } catch (error) {
             handleError(error, response);
         }
     }
 }
 
-const router = new Router(Routes);
+const controller = new UserController(new UserService(new UserModel(db)));
+const router = new Router(routes, controller);
 export default router;

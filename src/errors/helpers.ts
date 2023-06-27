@@ -1,12 +1,12 @@
 import { IncomingMessage, ServerResponse } from 'http';
 import ServerErrors, { ServerError } from '.';
 
-export function isServerError(error: unknown): error is ServerError {
+function isServerError(error: unknown): error is ServerError {
     return error instanceof ServerError;
 }
 
 function handleError(error: unknown, res: ServerResponse<IncomingMessage>) {
-    res.writeHead(isServerError(error) ? error.status : 500, {
+    res.writeHead(isServerError(error) ? error.statusCode : 500, {
         'Content-Type': 'application/json',
     });
     res.end(
@@ -18,19 +18,4 @@ function handleError(error: unknown, res: ServerResponse<IncomingMessage>) {
     );
 }
 
-function wrapInternalError<A extends Array<unknown>, R>(
-    handler: (...args: A) => Promise<R>,
-) {
-    return async (...args: A): Promise<R> => {
-        try {
-            return await handler(...args);
-        } catch (error) {
-            if (!isServerError(error)) {
-                throw ServerErrors.Internal;
-            }
-            throw error;
-        }
-    };
-}
-
-export { handleError, wrapInternalError };
+export { handleError, isServerError };

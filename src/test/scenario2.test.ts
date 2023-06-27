@@ -6,25 +6,25 @@ import { API_ROUTE, POST_INVALID_DATA, PUT_DATA } from './testConstants';
 
 describe('\nScenario 2: test invalid CRUD operations', () => {
     it('GET user but with invalid id', async () => {
-        const { status, message } = ServerErrors.NoUser;
+        const { statusCode, message } = ServerErrors.NoUser;
         const randomId = uuidv4();
 
         await request(server)
             .get(`${API_ROUTE}/${randomId}`)
-            .expect(status)
+            .expect(statusCode)
             .expect(({ body }) => {
                 expect(body).toEqual({ message });
             });
     });
 
     it('POST user with invalid body', async () => {
-        const { status, message } = ServerErrors.InvalidUserBody;
+        const { statusCode, message } = ServerErrors.InvalidUserBody;
 
         await request(server)
             .post(API_ROUTE)
             .set('Content-type', 'application/json')
             .send(POST_INVALID_DATA)
-            .expect(status)
+            .expect(statusCode)
             .expect(({ body }) => {
                 expect(body).toEqual({
                     message,
@@ -33,24 +33,24 @@ describe('\nScenario 2: test invalid CRUD operations', () => {
     });
 
     it('PUT user without id', async () => {
-        const { status, message } = ServerErrors.NotFound;
+        const { statusCode, message } = ServerErrors.NotFound;
 
         await request(server)
             .put(API_ROUTE)
             .set('Content-type', 'application/json')
             .send(PUT_DATA)
-            .expect(status)
+            .expect(statusCode)
             .expect(({ body }) => {
                 expect(body).toEqual({ message });
             });
     });
 
     it('DELETE user without providing id', async () => {
-        const { status, message } = ServerErrors.NotFound;
+        const { statusCode, message } = ServerErrors.NotFound;
 
         await request(server)
             .delete(API_ROUTE)
-            .expect(status)
+            .expect(statusCode)
             .expect(({ body }) => {
                 expect(body).toEqual({ message });
             });
