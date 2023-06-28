@@ -1,7 +1,7 @@
 import { validate } from 'uuid';
 import { UserDto } from '../types';
 
-export function checkIsValidUUID(id: string) {
+export function isValidUUID(id: string) {
     return validate(id);
 }
 

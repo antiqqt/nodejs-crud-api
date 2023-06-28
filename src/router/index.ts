@@ -2,10 +2,10 @@ import { IncomingMessage, ServerResponse } from 'http';
 
 import db from '../data/db';
 import ServerErrors from '../errors';
-import { handleError } from '../errors/helpers';
 import UserController from '../user/controller';
 import UserModel from '../user/model';
-import UserService from '../user/service';
+import UserMiddleware from '../user/middleware';
+import { handleServerError } from '../user/controller/helpers';
 
 interface RequestRoute {
     url: string;
@@ -87,11 +87,11 @@ class Router {
 
             await this.controller[route.name](request, response);
         } catch (error) {
-            handleError(error, response);
+            handleServerError(error, response);
         }
     }
 }
 
-const controller = new UserController(new UserService(new UserModel(db)));
+const controller = new UserController(new UserMiddleware(new UserModel(db)));
 const router = new Router(routes, controller);
 export default router;

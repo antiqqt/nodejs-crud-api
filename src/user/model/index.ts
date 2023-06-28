@@ -1,10 +1,8 @@
 import { v4 as uuidv4 } from 'uuid';
-import ServerErrors from '../../errors';
-import { isServerError } from '../../errors/helpers';
+import ServerErrors, { isServerError } from '../../errors';
 import { User, UserDto } from '../types';
-import { checkIsValidUUID, isValidUserDto } from './helpers';
 
-function handleSystemError<This, Args extends unknown[], Return>(
+function handleUnknownError<This, Args extends unknown[], Return>(
     target: (this: This, ...args: Args) => Promise<Return>,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     context: ClassMethodDecoratorContext<
@@ -30,39 +28,29 @@ function handleSystemError<This, Args extends unknown[], Return>(
 export default class UserModel {
     constructor(private database: User[]) {}
 
-    @handleSystemError
+    @handleUnknownError
     async findAll() {
         return this.database;
     }
 
-    @handleSystemError
+    @handleUnknownError
     async findOne(id: string) {
-        if (!checkIsValidUUID(id)) {
-            throw ServerErrors.InvalidId;
-        }
-
         const user = this.database.find((u) => u.id === id);
         if (!user) throw ServerErrors.NoUser;
 
         return user;
     }
 
-    @handleSystemError
+    @handleUnknownError
     async create(userDto: UserDto) {
-        if (!isValidUserDto(userDto)) {
-            throw ServerErrors.InvalidUserBody;
-        }
-
         const newUser: User = { ...userDto, id: uuidv4() };
 
         this.database.push(newUser);
         return newUser;
     }
 
-    @handleSystemError
+    @handleUnknownError
     async update(id: string, userDto: UserDto) {
-        if (!checkIsValidUUID(id)) throw ServerErrors.InvalidId;
-
         const userIndex = this.database.findIndex((u) => u.id === id);
         if (userIndex === -1) throw ServerErrors.NoUser;
 
@@ -71,10 +59,8 @@ export default class UserModel {
         return this.database[userIndex];
     }
 
-    @handleSystemError
+    @handleUnknownError
     async delete(id: string) {
-        if (!checkIsValidUUID(id)) throw ServerErrors.InvalidId;
-
         const user = this.database.find((u) => u.id === id);
         if (!user) throw ServerErrors.NoUser;
 

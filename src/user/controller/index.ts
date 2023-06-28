@@ -1,13 +1,12 @@
 /* eslint-disable class-methods-use-this */
 import { IncomingMessage, ServerResponse } from 'http';
 import ServerErrors from '../../errors';
-import { handleError } from '../../errors/helpers';
-import UserService from '../service';
-import { extractRequestBody } from './helpers';
+import UserMiddleware from '../middleware';
+import { extractRequestBody, handleServerError } from './helpers';
 import { UserDto } from '../types';
 
 export default class UserController {
-    constructor(private service: UserService) {}
+    constructor(private middleware: UserMiddleware) {}
 
     // @route  GET /api/users
     async getUsers(
@@ -15,12 +14,12 @@ export default class UserController {
         response: ServerResponse<IncomingMessage>,
     ) {
         try {
-            const users = await this.service.findAll();
+            const users = await this.middleware.findAll();
 
             response.writeHead(200, { 'Content-Type': 'application/json' });
             response.end(JSON.stringify(users));
         } catch (error) {
-            handleError(error, response);
+            handleServerError(error, response);
         }
     }
 
@@ -33,12 +32,12 @@ export default class UserController {
             const userId = request.url?.split('/')[3];
             if (!userId) throw ServerErrors.InvalidId;
 
-            const user = await this.service.findOne(userId);
+            const user = await this.middleware.findOne(userId);
 
             response.writeHead(200, { 'Content-Type': 'application/json' });
             response.end(JSON.stringify(user));
         } catch (error) {
-            handleError(error, response);
+            handleServerError(error, response);
         }
     }
 
@@ -52,12 +51,12 @@ export default class UserController {
             if (typeof body !== 'string') throw ServerErrors.Internal;
 
             const newUserBody = JSON.parse(body);
-            const newProduct = await this.service.create(newUserBody);
+            const newProduct = await this.middleware.create(newUserBody);
 
             response.writeHead(201, { 'Content-Type': 'application/json' });
             response.end(JSON.stringify(newProduct));
         } catch (error) {
-            handleError(error, response);
+            handleServerError(error, response);
         }
     }
 
@@ -70,7 +69,7 @@ export default class UserController {
             const userId = request.url?.split('/')[3];
             if (!userId) throw ServerErrors.InvalidId;
 
-            const user = await this.service.findOne(userId);
+            const user = await this.middleware.findOne(userId);
 
             const body = await extractRequestBody(request);
             if (typeof body !== 'string') throw ServerErrors.Internal;
@@ -82,12 +81,15 @@ export default class UserController {
                 hobbies: hobbies ?? user.hobbies,
             };
 
-            const updatedUser = await this.service.update(userId, newUserBody);
+            const updatedUser = await this.middleware.update(
+                userId,
+                newUserBody,
+            );
 
             response.writeHead(200, { 'Content-Type': 'application/json' });
             response.end(JSON.stringify(updatedUser));
         } catch (error) {
-            handleError(error, response);
+            handleServerError(error, response);
         }
     }
 
@@ -100,12 +102,12 @@ export default class UserController {
             const userId = request.url?.split('/')[3];
             if (!userId) throw ServerErrors.InvalidId;
 
-            await this.service.delete(userId);
+            await this.middleware.delete(userId);
 
             response.writeHead(204, { 'Content-Type': 'application/json' });
             response.end();
         } catch (error) {
-            handleError(error, response);
+            handleServerError(error, response);
         }
     }
 }

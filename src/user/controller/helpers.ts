@@ -1,5 +1,5 @@
 import { IncomingMessage, ServerResponse } from 'http';
-import ServerErrors from '../../errors';
+import ServerErrors, { isServerError } from '../../errors';
 import { HTTPStatusCodes } from '../types';
 
 export function extractRequestBody(request: IncomingMessage) {
@@ -27,4 +27,20 @@ export function sendResponse<Data>(
 ) {
     response.statusCode = statusCode;
     response.end(JSON.stringify(data));
+}
+
+export function handleServerError(
+    error: unknown,
+    response: ServerResponse<IncomingMessage>,
+) {
+    response.writeHead(isServerError(error) ? error.statusCode : 500, {
+        'Content-Type': 'application/json',
+    });
+    response.end(
+        JSON.stringify({
+            message: isServerError(error)
+                ? error.message
+                : ServerErrors.Internal.message,
+        }),
+    );
 }

@@ -42,3 +42,7 @@ const ServerErrors = {
 } as const;
 
 export default ServerErrors;
+
+export function isServerError(error: unknown): error is ServerError {
+    return error instanceof ServerError;
+}
