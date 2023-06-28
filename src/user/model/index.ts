@@ -1,9 +1,8 @@
 import { v4 as uuidv4 } from 'uuid';
 import ServerErrors from '../../errors';
 import { isServerError } from '../../errors/helpers';
-import { UserData } from '../../types';
-import { UserDto } from '../types';
-import { checkIsValidUUID, isValidUserBody } from './helpers';
+import { User, UserDto } from '../types';
+import { checkIsValidUUID, isValidUserDto } from './helpers';
 
 function handleSystemError<This, Args extends unknown[], Return>(
     target: (this: This, ...args: Args) => Promise<Return>,
@@ -29,7 +28,7 @@ function handleSystemError<This, Args extends unknown[], Return>(
 }
 
 export default class UserModel {
-    constructor(private database: UserData[]) {}
+    constructor(private database: User[]) {}
 
     @handleSystemError
     async findAll() {
@@ -50,11 +49,11 @@ export default class UserModel {
 
     @handleSystemError
     async create(userDto: UserDto) {
-        if (!isValidUserBody(userDto)) {
+        if (!isValidUserDto(userDto)) {
             throw ServerErrors.InvalidUserBody;
         }
 
-        const newUser: UserData = { ...userDto, id: uuidv4() };
+        const newUser: User = { ...userDto, id: uuidv4() };
 
         this.database.push(newUser);
         return newUser;

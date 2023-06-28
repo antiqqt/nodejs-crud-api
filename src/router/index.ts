@@ -19,7 +19,13 @@ enum HTTPMethods {
     DELETE = 'DELETE',
 }
 
-const routes = [
+interface AppRoute {
+    name: keyof UserController;
+    url: RegExp;
+    method: HTTPMethods;
+}
+
+const routes: AppRoute[] = [
     {
         name: 'getUsers',
         url: /^\/api\/users$/,
@@ -45,7 +51,7 @@ const routes = [
         url: /^\/api\/users\/[\d | \w | -]+$/,
         method: HTTPMethods.DELETE,
     },
-] as const;
+];
 
 class Router {
     constructor(

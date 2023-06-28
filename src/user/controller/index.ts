@@ -2,9 +2,9 @@
 import { IncomingMessage, ServerResponse } from 'http';
 import ServerErrors from '../../errors';
 import { handleError } from '../../errors/helpers';
-import { UserBody } from '../../types';
 import UserService from '../service';
 import { extractRequestBody } from './helpers';
+import { UserDto } from '../types';
 
 export default class UserController {
     constructor(private service: UserService) {}
@@ -76,7 +76,7 @@ export default class UserController {
             if (typeof body !== 'string') throw ServerErrors.Internal;
             const { age, username, hobbies } = JSON.parse(body);
 
-            const newUserBody: UserBody = {
+            const newUserBody: UserDto = {
                 age: age ?? user.age,
                 username: username ?? user.username,
                 hobbies: hobbies ?? user.hobbies,
