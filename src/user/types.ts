@@ -9,7 +9,7 @@ export const enum HTTPStatusCodes {
 export interface User {
     id: string;
     username: string;
-    age: string;
+    age: number;
     hobbies: string[];
 }
 
