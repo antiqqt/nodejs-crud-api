@@ -9,14 +9,9 @@ import {
 import { availableParallelism } from 'node:os';
 import process from 'node:process';
 import db from '../data/db';
-import ServerErrors from '../errors';
-import {
-    extractBodyJSON,
-    handleServerError,
-    sendResponse,
-} from '../user/controller/helpers';
+import { handleServerError } from '../user/controller/helpers';
 import { isValidUserDatabase } from '../user/middleware/helpers';
-import { HTTPMethods, createUserRouter } from '../user/router';
+import { createUserRouter } from '../user/router';
 import RoundRobinCounter from './counter';
 
 const availableParalellism = availableParallelism();
@@ -79,40 +74,18 @@ export default function createLoadBalancer(port: number) {
                         // send worker response as the cluster response
                         console.log('cluster receives workerResponse');
 
-                        const workerBody = await extractBodyJSON(
-                            workerResponse,
-                        );
-
                         clusterResponse.setHeader(
                             'Content-Type',
                             'application/json',
                         );
-
-                        sendResponse(
-                            clusterResponse,
-                            workerBody,
-                            workerResponse.statusCode ??
-                                ServerErrors.Internal.statusCode,
-                        );
+                        workerResponse.pipe(clusterResponse);
                     } catch (error) {
                         handleServerError(error, clusterResponse);
                     }
                 },
             );
 
-            if (
-                clusterRequest.method === HTTPMethods.POST ||
-                clusterRequest.method === HTTPMethods.PUT
-            ) {
-                try {
-                    const clusterBody = await extractBodyJSON(clusterRequest);
-                    console.log('clusterbody', JSON.stringify(clusterBody));
-                    workerRequest.write(JSON.stringify(clusterBody));
-                } catch (error) {
-                    handleServerError(error, clusterResponse);
-                }
-            }
-            workerRequest.end();
+            clusterRequest.pipe(workerRequest);
         }).listen(process.env.PORT, () =>
             console.log(`Balancer is running on port: ${port}`),
         );
