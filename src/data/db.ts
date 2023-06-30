@@ -1,4 +1,4 @@
-import { UserData } from '../types';
+import { User } from '../user/types';
 
-const db: UserData[] = [];
+const db: User[] = [];
 export default db;

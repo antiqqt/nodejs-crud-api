@@ -1,9 +1,14 @@
 import request from 'supertest';
-import server from '..';
-import { Errors } from '../errors';
+import { createServer } from 'http';
 import { API_ROUTE, POST_DATA, PUT_DATA, SuccessStatus } from './testConstants';
+import ServerErrors from '../errors';
+import { createUserRouter } from '../user/router';
+import db from '../data/db';
 
 describe('\nScenario 1: test all CRUD operations', () => {
+    const server = createServer((req, res) => {
+        createUserRouter(db).handleRequest(req, res);
+    });
     let id: string;
 
     it('GET all users', async () => {
@@ -51,18 +56,18 @@ describe('\nScenario 1: test all CRUD operations', () => {
             });
     });
 
-    it('DELETE remove previously created user', async () => {
+    it('DELETE previously created user', async () => {
         await request(server)
             .delete(`${API_ROUTE}/${id}`)
             .expect(SuccessStatus.DELETE);
     });
 
     it('GET a deleted object by id', async () => {
-        const { status, message } = Errors.NoUser;
+        const { statusCode, message } = ServerErrors.NoUser;
 
         await request(server)
             .get(`${API_ROUTE}/${id}`)
-            .expect(status)
+            .expect(statusCode)
             .expect(({ body }) => {
                 expect(body).toEqual({ message });
             });

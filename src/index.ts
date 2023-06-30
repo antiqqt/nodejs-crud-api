@@ -1,25 +1,26 @@
-import { createServer } from 'node:http';
 import * as dotenv from 'dotenv';
-import router from './router';
-import clusterize from './cluster';
+import { createServer } from 'node:http';
+import createLoadBalancer from './cluster';
+import db from './data/db';
+import { createUserRouter } from './user/router';
 
 dotenv.config();
 
 const port = Number(process.env.PORT) || 6000;
 
-const server = createServer((req, res) => {
-    router.handleRequest(req, res);
-});
+if (process.env.NODE_MULTI) {
+    createLoadBalancer(port);
+} else {
+    const UserRouter = createUserRouter(db);
 
-if (process.env.NODE_ENV !== 'test') {
-    if (process.env.NODE_MULTI) {
-        clusterize(port);
-    } else {
+    const server = createServer((request, response) => {
+        UserRouter.handleRequest(request, response);
+    });
+
+    if (process.env.NODE_ENV !== 'test') {
         server.listen(port, () => {
             // eslint-disable-next-line no-console
             console.log(`Server is running on port: ${port}`);
         });
     }
 }
-
-export default server;

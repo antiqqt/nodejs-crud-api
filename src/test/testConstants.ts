@@ -9,17 +9,17 @@ export const SuccessStatus = {
 
 export const POST_DATA = {
     username: 'Antiqqt',
-    age: '23',
+    age: 24,
     hobbies: ['NodeJS', 'Typescript'],
 };
 
 export const PUT_DATA = {
     username: 'updated Antiqqt',
-    age: '24',
+    age: 24,
     hobbies: ['NodeJS', 'Typescript', 'React'],
 };
 
 export const POST_INVALID_DATA = {
-    age: 23,
+    age: '23',
     hobbies: [34953509353],
 };

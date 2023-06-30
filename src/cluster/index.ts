@@ -1,48 +1,29 @@
 /* eslint-disable no-console */
 import cluster from 'node:cluster';
 import {
-    createServer,
+    request as HTTPRequest,
     IncomingMessage,
-    request,
     ServerResponse,
+    createServer,
 } from 'node:http';
-import { cpus } from 'node:os';
+import { availableParallelism } from 'node:os';
 import process from 'node:process';
-import { Errors } from '../errors';
-import router from '../router';
+import db from '../data/db';
+import { handleServerError } from '../user/controller/helpers';
+import { isValidUserDatabase } from '../user/middleware/helpers';
+import { createUserRouter } from '../user/router';
+import RoundRobinCounter from './counter';
 
-export class Counter {
-    private count: number;
-
-    constructor(private cpusCount: number) {
-        this.count = 0;
-    }
-
-    increment() {
-        const newCount = this.count + 1;
-
-        if (newCount === this.cpusCount) {
-            this.count = 0;
-        } else {
-            this.count = newCount;
-        }
-    }
-
-    getCurrentCount() {
-        return this.count;
-    }
-}
-
-const numCPUs = cpus().length;
+const availableParalellism = availableParallelism();
 const workers: {
     port: number;
     worker: ReturnType<typeof cluster.fork>;
 }[] = [];
-const counter = new Counter(numCPUs);
+const counter = new RoundRobinCounter(availableParalellism);
 
-export default function clusterize(port: number) {
+export default function createLoadBalancer(port: number) {
     if (cluster.isPrimary) {
-        for (let i = 0; i < numCPUs; i += 1) {
+        for (let i = 0; i < availableParalellism; i += 1) {
             const workerPort = port + i + 1;
             const worker = cluster.fork({ PORT: workerPort });
 
@@ -52,60 +33,80 @@ export default function clusterize(port: number) {
             });
         }
 
-        createServer((req, res) => {
-            const currentWorker = workers[counter.getCurrentCount()];
+        let clusterDatabase = db;
 
-            const options = {
-                headers: req.headers,
-                method: req.method,
-                path: req.url,
-                port: currentWorker.port,
-            };
+        workers.forEach(({ worker }) => {
+            worker.on('message', ({ workerDatabase }) => {
+                clusterDatabase = workerDatabase;
+            });
+        });
+
+        cluster.on('exit', (worker) => {
+            console.log(`Worker ${worker.process.pid} died`);
+        });
+
+        createServer(async (clusterRequest, clusterResponse) => {
+            const currentWorker = workers[counter.increment()];
 
             console.log(
                 `Request is handled by worker on port ${currentWorker.port}`,
             );
 
-            const workerRequest = request(options, (workerResponse) => {
-                let data = '';
+            const options = {
+                headers: clusterRequest.headers,
+                method: clusterRequest.method,
+                path: clusterRequest.url,
+                port: currentWorker.port,
+            };
 
-                workerResponse.on('data', (chunk) => {
-                    data += chunk.toString();
-                });
+            // Update worker database and
+            // redirect the request to the worker router
+            currentWorker.worker.send({ clusterDatabase });
 
-                workerResponse.on('end', () => {
-                    res.writeHead(
-                        workerResponse.statusCode ?? Errors.Internal.status,
-                        { 'content-Type': 'application/json' },
-                    );
-                    res.end(data);
-                });
-            });
+            const workerRequest = HTTPRequest(
+                options,
+                async (workerResponse) => {
+                    try {
+                        // Handle request in worker and
+                        // send worker response as the cluster response
 
-            let body = '';
+                        clusterResponse.setHeader(
+                            'Content-Type',
+                            'application/json',
+                        );
+                        workerResponse.pipe(clusterResponse);
+                    } catch (error) {
+                        handleServerError(error, clusterResponse);
+                    }
+                },
+            );
 
-            req.on('data', (chunk) => {
-                body += chunk.toString();
-            });
-            req.on('end', () => {
-                workerRequest.write(body);
-                workerRequest.end();
-            });
-
-            counter.increment();
+            clusterRequest.pipe(workerRequest);
         }).listen(process.env.PORT, () =>
             console.log(`Balancer is running on port: ${port}`),
         );
-
-        cluster.on('exit', (worker) => {
-            console.log(`Worker ${worker.process.pid} died`);
-        });
     }
 
     if (cluster.isWorker) {
-        createServer((req: IncomingMessage, res: ServerResponse) => {
-            router.handleRequest(req, res);
-        }).listen(process.env.PORT);
+        let workerDatabase = db;
+
+        process.on('message', ({ clusterDatabase }) => {
+            if (!isValidUserDatabase(clusterDatabase)) return;
+
+            workerDatabase = clusterDatabase;
+        });
+
+        createServer(
+            async (request: IncomingMessage, response: ServerResponse) => {
+                // Handle cluster request and
+                // send the db state back to the cluster
+
+                const router = createUserRouter(workerDatabase);
+                await router.handleRequest(request, response);
+
+                process.send?.({ workerDatabase });
+            },
+        ).listen(process.env.PORT);
 
         console.log(`Worker is running on port ${process.env.PORT}`);
     }
