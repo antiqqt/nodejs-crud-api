@@ -1,10 +1,16 @@
 import request from 'supertest';
 import { v4 as uuidv4 } from 'uuid';
-import server from '..';
+import { createServer } from 'http';
 import ServerErrors from '../errors';
 import { API_ROUTE, POST_INVALID_DATA, PUT_DATA } from './testConstants';
+import { createUserRouter } from '../user/router';
+import db from '../data/db';
 
 describe('\nScenario 2: test invalid CRUD operations', () => {
+    const server = createServer((req, res) => {
+        createUserRouter(db).handleRequest(req, res);
+    });
+
     it('GET user but with invalid id', async () => {
         const { statusCode, message } = ServerErrors.NoUser;
         const randomId = uuidv4();

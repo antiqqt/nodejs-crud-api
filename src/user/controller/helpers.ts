@@ -9,13 +9,11 @@ export function extractBodyJSON(
         const buffer: Uint8Array[] = [];
 
         request.on('data', (chunk) => {
-            console.log('Is JSON still reading?', !request.isPaused());
             buffer.push(chunk);
         });
 
         request.on('end', () => {
             try {
-                console.log('JSON reading ended');
                 const bodyString = Buffer.concat(buffer).toString();
                 const body = JSON.parse(bodyString);
 
@@ -25,8 +23,9 @@ export function extractBodyJSON(
             }
         });
 
+        request.on('end', () => {});
+
         request.on('error', () => {
-            console.log('JSON reading error');
             reject(ServerErrors.Internal);
         });
     });

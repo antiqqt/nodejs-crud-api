@@ -46,12 +46,8 @@ export default class UserController {
         response: ServerResponse<IncomingMessage>,
     ) {
         try {
-            console.log('handling POST request');
-
             const newUserDto = await extractBodyJSON(request);
-            // if (isServerError(newUserDto)) throw newUserDto;
-
-            console.log('handling POST request next');
+            if (isServerError(newUserDto)) throw newUserDto;
 
             const newProduct = await this.middleware.create(newUserDto);
 

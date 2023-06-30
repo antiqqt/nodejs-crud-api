@@ -61,11 +61,9 @@ export default class UserModel {
 
     @handleUnknownError
     async delete(id: string) {
-        const user = this.database.find((u) => u.id === id);
-        if (!user) throw ServerErrors.NoUser;
+        const userIndex = this.database.findIndex((u) => u.id === id);
+        if (userIndex === -1) throw ServerErrors.NoUser;
 
-        this.database = this.database.filter((u) => u.id !== id);
-
-        return this.database;
+        this.database.splice(userIndex, 1);
     }
 }

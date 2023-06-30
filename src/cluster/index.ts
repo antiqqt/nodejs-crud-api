@@ -35,6 +35,16 @@ export default function createLoadBalancer(port: number) {
 
         let clusterDatabase = db;
 
+        workers.forEach(({ worker }) => {
+            worker.on('message', ({ workerDatabase }) => {
+                clusterDatabase = workerDatabase;
+            });
+        });
+
+        cluster.on('exit', (worker) => {
+            console.log(`Worker ${worker.process.pid} died`);
+        });
+
         createServer(async (clusterRequest, clusterResponse) => {
             const currentWorker = workers[counter.increment()];
 
@@ -42,25 +52,12 @@ export default function createLoadBalancer(port: number) {
                 `Request is handled by worker on port ${currentWorker.port}`,
             );
 
-            cluster.on('exit', (worker) => {
-                console.log(`Worker ${worker.process.pid} died`);
-            });
-
             const options = {
                 headers: clusterRequest.headers,
                 method: clusterRequest.method,
                 path: clusterRequest.url,
                 port: currentWorker.port,
             };
-
-            workers.forEach(({ worker }) => {
-                worker.on('message', ({ workerDatabase }) => {
-                    if (worker.id !== currentWorker.worker.id) return;
-                    console.log('cluster received db');
-
-                    clusterDatabase = workerDatabase;
-                });
-            });
 
             // Update worker database and
             // redirect the request to the worker router
@@ -72,7 +69,6 @@ export default function createLoadBalancer(port: number) {
                     try {
                         // Handle request in worker and
                         // send worker response as the cluster response
-                        console.log('cluster receives workerResponse');
 
                         clusterResponse.setHeader(
                             'Content-Type',
@@ -97,7 +93,6 @@ export default function createLoadBalancer(port: number) {
         process.on('message', ({ clusterDatabase }) => {
             if (!isValidUserDatabase(clusterDatabase)) return;
 
-            console.log('worker received db');
             workerDatabase = clusterDatabase;
         });
 
@@ -105,14 +100,9 @@ export default function createLoadBalancer(port: number) {
             async (request: IncomingMessage, response: ServerResponse) => {
                 // Handle cluster request and
                 // send the db state back to the cluster
-                console.log('worker handles request');
 
-                try {
-                    const router = createUserRouter(workerDatabase);
-                    await router.handleRequest(request, response);
-                } catch (error) {
-                    console.error(error);
-                }
+                const router = createUserRouter(workerDatabase);
+                await router.handleRequest(request, response);
 
                 process.send?.({ workerDatabase });
             },
