@@ -1,9 +1,8 @@
 /* eslint-disable class-methods-use-this */
 import { IncomingMessage, ServerResponse } from 'http';
-import ServerErrors from '../../errors';
+import ServerErrors, { isServerError } from '../../errors';
 import UserMiddleware from '../middleware';
-import { extractRequestBody, handleServerError } from './helpers';
-import { UserDto } from '../types';
+import { extractBodyJSON, handleServerError } from './helpers';
 
 export default class UserController {
     constructor(private middleware: UserMiddleware) {}
@@ -47,11 +46,14 @@ export default class UserController {
         response: ServerResponse<IncomingMessage>,
     ) {
         try {
-            const body = await extractRequestBody(request);
-            if (typeof body !== 'string') throw ServerErrors.Internal;
+            console.log('handling POST request');
 
-            const newUserBody = JSON.parse(body);
-            const newProduct = await this.middleware.create(newUserBody);
+            const newUserDto = await extractBodyJSON(request);
+            // if (isServerError(newUserDto)) throw newUserDto;
+
+            console.log('handling POST request next');
+
+            const newProduct = await this.middleware.create(newUserDto);
 
             response.writeHead(201, { 'Content-Type': 'application/json' });
             response.end(JSON.stringify(newProduct));
@@ -69,21 +71,12 @@ export default class UserController {
             const userId = request.url?.split('/')[3];
             if (!userId) throw ServerErrors.InvalidId;
 
-            const user = await this.middleware.findOne(userId);
-
-            const body = await extractRequestBody(request);
-            if (typeof body !== 'string') throw ServerErrors.Internal;
-            const { age, username, hobbies } = JSON.parse(body);
-
-            const newUserBody: UserDto = {
-                age: age ?? user.age,
-                username: username ?? user.username,
-                hobbies: hobbies ?? user.hobbies,
-            };
+            const newUserDto = await extractBodyJSON(request);
+            if (isServerError(newUserDto)) throw newUserDto;
 
             const updatedUser = await this.middleware.update(
                 userId,
-                newUserBody,
+                newUserDto,
             );
 
             response.writeHead(200, { 'Content-Type': 'application/json' });

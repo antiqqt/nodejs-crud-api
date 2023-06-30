@@ -1,26 +1,38 @@
 import { IncomingMessage, ServerResponse } from 'http';
-import ServerErrors, { isServerError } from '../../errors';
+import ServerErrors, { ServerError, isServerError } from '../../errors';
 import { HTTPStatusCodes } from '../types';
 
-export function extractRequestBody(request: IncomingMessage) {
+export function extractBodyJSON(
+    request: IncomingMessage,
+): Promise<ServerError | unknown> {
     return new Promise((resolve, reject) => {
-        try {
-            let body = '';
+        const buffer: Uint8Array[] = [];
 
-            request.on('data', (chunk) => {
-                body += chunk.toString();
-            });
+        request.on('data', (chunk) => {
+            console.log('Is JSON still reading?', !request.isPaused());
+            buffer.push(chunk);
+        });
 
-            request.on('end', () => {
+        request.on('end', () => {
+            try {
+                console.log('JSON reading ended');
+                const bodyString = Buffer.concat(buffer).toString();
+                const body = JSON.parse(bodyString);
+
                 resolve(body);
-            });
-        } catch {
+            } catch (error) {
+                reject(ServerErrors.Internal);
+            }
+        });
+
+        request.on('error', () => {
+            console.log('JSON reading error');
             reject(ServerErrors.Internal);
-        }
+        });
     });
 }
 
-export function sendResponse<Data>(
+export async function sendResponse<Data>(
     response: ServerResponse<IncomingMessage>,
     data: Data,
     statusCode: HTTPStatusCodes,

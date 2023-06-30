@@ -1,6 +1,5 @@
 import ServerErrors from '../../errors';
 import type UserModel from '../model';
-import { UserDto } from '../types';
 import { isValidUUID, isValidUserDto } from './helpers';
 
 export default class UserMiddleware {
@@ -18,7 +17,7 @@ export default class UserMiddleware {
         return this.model.findOne(id);
     }
 
-    async create(userDto: UserDto) {
+    async create(userDto: unknown) {
         if (!isValidUserDto(userDto)) {
             throw ServerErrors.InvalidUserBody;
         }
@@ -26,8 +25,11 @@ export default class UserMiddleware {
         return this.model.create(userDto);
     }
 
-    async update(id: string, userDto: UserDto) {
+    async update(id: string, userDto: unknown) {
         if (!isValidUUID(id)) throw ServerErrors.InvalidId;
+        if (!isValidUserDto(userDto)) {
+            throw ServerErrors.InvalidUserBody;
+        }
 
         return this.model.update(id, userDto);
     }

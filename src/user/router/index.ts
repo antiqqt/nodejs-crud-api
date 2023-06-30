@@ -1,18 +1,18 @@
 import { IncomingMessage, ServerResponse } from 'http';
 
-import db from '../data/db';
-import ServerErrors from '../errors';
-import UserController from '../user/controller';
-import UserModel from '../user/model';
-import UserMiddleware from '../user/middleware';
-import { handleServerError } from '../user/controller/helpers';
+import ServerErrors from '../../errors';
+import UserController from '../controller';
+import { handleServerError } from '../controller/helpers';
+import UserMiddleware from '../middleware';
+import UserModel from '../model';
+import { User } from '../types';
 
 interface RequestRoute {
     url: string;
     method: string;
 }
 
-enum HTTPMethods {
+export enum HTTPMethods {
     GET = 'GET',
     POST = 'POST',
     PUT = 'PUT',
@@ -53,7 +53,7 @@ const routes: AppRoute[] = [
     },
 ];
 
-class Router {
+export default class Router {
     constructor(
         private appRoutes: typeof routes,
         private controller: UserController,
@@ -92,6 +92,10 @@ class Router {
     }
 }
 
-const controller = new UserController(new UserMiddleware(new UserModel(db)));
-const router = new Router(routes, controller);
-export default router;
+export function createUserRouter(database: User[]) {
+    const controller = new UserController(
+        new UserMiddleware(new UserModel(database)),
+    );
+
+    return new Router(routes, controller);
+}
